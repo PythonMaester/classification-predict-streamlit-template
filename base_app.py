@@ -75,7 +75,7 @@ def main():
 	# dictionary of predictions and definitions
 	pred_values = {2:'This is news',
 	1:'The author believes in climate change',
-	0:'The tweet is neutral in regards climate change',
+	0:'The tweet is neutral in regards to climate change',
 	-1:'The author does not believe in climate change'
 	}
 	
@@ -87,7 +87,7 @@ def main():
 
 	# Building out the "Information" page
 	if selection == "Information":
-		image = Image.open('images\markus-spiske-rxo6PaEhyqQ-unsplash.jpg')
+		image = Image.open('images\markus-spiske-rxo6paehyqq-unsplash.jpg')
 		st.info("General Information")
 		st.image(image, caption='Climate change, photo by Markus Spiske' )#, use_column_width=True)
 	
