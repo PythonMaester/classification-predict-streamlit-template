@@ -175,7 +175,7 @@ def main():
 			st.write(dat1.head())
 
 		# testing images
-		image = Image.open('images\markus-spiske-rxo6PaEhyqQ-unsplash.jpg')
+		image = Image.open('images\markus-spiske-rxo6paehyqq-unsplash.jpg')
 
 		st.image(image, caption='Climate change, photo by Markus Spiske' , use_column_width=True)
 	if selection == 'Our People':
