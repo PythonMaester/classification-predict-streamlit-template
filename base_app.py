@@ -12,8 +12,6 @@
 import streamlit as st
 
 # Data dependencies
-import spacy
-nlp = spacy.load('en_core_web_sm')
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
