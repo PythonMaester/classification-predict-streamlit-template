@@ -18,7 +18,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-
+from wordcloud import WordCloud
 # Enter your code here:
 dftrain = pd.read_csv('train.csv')
 dftest = pd.read_csv('test.csv')
@@ -157,8 +157,37 @@ def main():
 		plt.ylabel('Sentiment counts')
 		plt.title('Sentiment Value Counts')
 		st.pyplot()
-
 		st.markdown('This graph shows that these four classes are imbalanced, which affects the accuracy of the model negatively. This shows that resambling is necessary before training a model with this data.')
+		class2_words = ' '.join([text for text in dftrain[dftrain['sentiment']==2]['message']])
+		class1_words = ' '.join([text for text in dftrain[dftrain['sentiment']==1]['message']])
+		class0_words = ' '.join([text for text in dftrain[dftrain['sentiment']==0]['message']])
+		class_neg1_words = ' '.join([text for text in dftrain[dftrain['sentiment']==-1]['message']])
+
+		wordcloud2 = WordCloud(width=800, height=500,random_state=21,max_font_size=110).generate(class2_words)
+		wordcloud1 = WordCloud(width=800, height=500,random_state=21,max_font_size=110).generate(class1_words)
+		wordcloud0 = WordCloud(width=800, height=500,random_state=21,max_font_size=110).generate(class0_words)
+		wordcloudneg1 = WordCloud(width=800, height=500,random_state=21,max_font_size=110).generate(class_neg1_words)
+		fig = plt.figure(figsize=(1000,500))
+		fig,axs = plt.subplots(2, 2)
+		fig.suptitle('Boxplots for word count of each class')
+		# word cloud plots
+		axs[0,0].imshow(wordcloud2, interpolation="bilinear")
+		axs[1,1].imshow(wordcloud1, interpolation="bilinear")
+		axs[0,1].imshow(wordcloud0, interpolation="bilinear")
+		axs[1,0].imshow(wordcloudneg1, interpolation="bilinear")
+		# removing axes
+		axs[0,0].axis('off')
+		axs[1,1].axis('off')
+		axs[0,1].axis('off')
+		axs[1,0].axis('off')
+		# word cloud titles
+		axs[0,0].set_title('Climate Change News')
+		axs[1,1].set_title('Pro Climate Change')
+		axs[0,1].set_title('Neutral to Climate Change')
+		axs[1,0].set_title('Anti Climate Change')
+		st.pyplot()
+		st.markdown('The key take away from these word clouds is that each class has its own distinct predominant words(or phrases)')
+
 	if selection == 'Test Shop':
 		st.markdown('In this section im just testing things out,\n dont know what i should put in and how i should do it but it will be here for now')
 
@@ -175,7 +204,7 @@ def main():
 			st.write(dat1.head())
 
 		# testing images
-		image = Image.open('images\markus-spiske-rxo6paehyqq-unsplash.jpg')
+		image = Image.open('images\markus-spiske-rxo6PaEhyqQ-unsplash.jpg')
 
 		st.image(image, caption='Climate change, photo by Markus Spiske' , use_column_width=True)
 	if selection == 'Our People':
