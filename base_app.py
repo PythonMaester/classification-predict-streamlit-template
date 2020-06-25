@@ -19,6 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from wordcloud import WordCloud
+import string
 # Enter your code here:
 dftrain = pd.read_csv('train.csv')
 dftest = pd.read_csv('test.csv')
@@ -28,7 +29,7 @@ from sklearn.model_selection import train_test_split
 
 X = dftrain['message']  # this time we want to look at the text
 y = dftrain['sentiment']
-
+#####################Pipeline Model
 # word count analysis
 word_count = dftrain['message'].apply(lambda x: len(x.split()))
 dftrain['word_count'] = word_count
@@ -46,13 +47,67 @@ from sklearn.svm import LinearSVC
 # clf = LinearSVC()
 
 from sklearn.pipeline import Pipeline
-
 text_clf = Pipeline([('tfidf', TfidfVectorizer()),
-                     ('clf', LinearSVC()),
-])
+                     ('clf', LinearSVC()),])
 
 # Feed the training data through the pipeline
 text_clf.fit(X_train, y_train)  
+
+############################Logistic Regression Model
+#creating a copy of our dataframe
+# punctuation count 
+
+dftrain['punct_count']  = dftrain['message'].apply(lambda x: len([i for i in x if i in string.punctuation]))
+
+df_copy = dftrain
+
+# setting our XFeature and label variables
+X = df_copy[['word_count','punct_count']]  
+y = df_copy['sentiment']
+
+# splitting the train data
+from sklearn.model_selection import train_test_split
+x_train, x_test, Y_train, Y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+#selecting the logistic regression model from sklearn and selecting lbfgs as our solver
+from sklearn.linear_model import LogisticRegression
+lr_model = LogisticRegression(solver='lbfgs')
+
+#training our model
+lr_model.fit(x_train, Y_train)
+
+##########################SVM Model
+df_SVM_train = dftrain
+df_SVM_test=dftest
+
+#Removing puncuations from the messege column
+def remove_punctuations(text):
+    for punctuation in string.punctuation:
+        text = text.replace(punctuation, '')
+    return text
+
+df_SVM_train["message"] = df_SVM_train['message'].apply(remove_punctuations)
+df_SVM_test["message"] = df_SVM_test['message'].apply(remove_punctuations)
+
+#Defining training and testing data
+x_train = df_SVM_train['message']
+y_train = df_SVM_train['sentiment']
+x_test = df_SVM_test['message']
+
+from sklearn.feature_extraction.text import CountVectorizer
+count_vect = CountVectorizer()
+
+X_train_counts = count_vect.fit_transform(x_train)
+
+#Transforming also the x_test data to numerical data
+X_test_counts = count_vect.transform(x_test)
+
+from sklearn.svm import SVC  # to be added on the import cell
+svm = SVC()
+svc = SVC(kernel='linear',C=2,degree=5,gamma='auto')
+svc.fit(X_train_counts, y_train)
+
+################################
 
 # changing background colour
 def local_css(file_name):
@@ -61,7 +116,7 @@ def local_css(file_name):
 
 local_css('style.css')
 
-#@st.cache(suppress_st_warning=True)
+@st.cache(suppress_st_warning=True)
 
 # The main function where we will build the actual app
 def main():
@@ -100,23 +155,27 @@ def main():
 
 	# Building out the predication page
 	if selection == "Prediction":
+		# option to choose model
+		modsel = st.selectbox('Choose a model for prediction:', ["SKLearn Pipeline", "Logistic Regression", "SVM"])
+		
+
 		st.info("Prediction with ML Models")
 		# Creating a text box for user input
 		tweet_text = st.text_area("Enter Text","Type Here")
 
 		if st.button("Classify"):
-			# Transforming user input with vectorizer
-			# vect_text = tweet_cv.transform([tweet_text]).toarray()
-			# Load your .pkl file with the model of your choice + make predictions
-			# Try loading in multiple models to give the user a choice
-			# predictor = joblib.load(open(os.path.join("resources/Logistic_regression.pkl"),"rb"))
-			# prediction = predictor.predict(vect_text)
-
+			if modsel == "SKLearn Pipeline":
+				prediction =text_clf.predict([tweet_text])
+				st.success("Text Category: {}".format(pred_values[prediction[0]]))
+			elif modsel == "Logistic Regression":
+				prediction =lr_model.predict(tweet_text)
+				st.success("Text Category: {}".format(pred_values[prediction[0]]))
+			elif modsel == "SVM":
+				prediction =svc.predict(tweet_text)
+				st.success("Text Category: {}".format(pred_values[prediction[0]]))
 			# When model has successfully run, will print prediction
 			# You can use a dictionary or similar structure to make this output
 			# more human interpretable.
-			prediction =text_clf.predict([tweet_text])
-			st.success("Text Category: {}".format(pred_values[prediction[0]]))
 	if selection == "Exploratory Data Analysis":
 		# boxplots for word count analysis
 		# create subplots
@@ -158,11 +217,15 @@ def main():
 		plt.title('Sentiment Value Counts')
 		st.pyplot()
 		st.markdown('This graph shows that these four classes are imbalanced, which affects the accuracy of the model negatively. This shows that resambling is necessary before training a model with this data.')
+
+		# the following code focuses on word clouds
+		# extracting messages of each class
 		class2_words = ' '.join([text for text in dftrain[dftrain['sentiment']==2]['message']])
 		class1_words = ' '.join([text for text in dftrain[dftrain['sentiment']==1]['message']])
 		class0_words = ' '.join([text for text in dftrain[dftrain['sentiment']==0]['message']])
 		class_neg1_words = ' '.join([text for text in dftrain[dftrain['sentiment']==-1]['message']])
 
+		# creating wordclouds for each class
 		wordcloud2 = WordCloud(width=800, height=500,random_state=21,max_font_size=110).generate(class2_words)
 		wordcloud1 = WordCloud(width=800, height=500,random_state=21,max_font_size=110).generate(class1_words)
 		wordcloud0 = WordCloud(width=800, height=500,random_state=21,max_font_size=110).generate(class0_words)
