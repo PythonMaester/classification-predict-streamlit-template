@@ -7,8 +7,11 @@
 	0: The message has a neutral sentiment
 	-1: The author does not believe in climate change
 """
+
+
 #---------------------------------------------------------------
 # Streamlit dependencies
+
 import streamlit as st
 
 # Data dependencies
@@ -18,93 +21,11 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from wordcloud import WordCloud
 import string
-# Enter your code here:
+import pickle
+import joblib
+
+#loading the data
 dftrain = pd.read_csv('train.csv')
-dftest = pd.read_csv('test.csv')
-
-# splitting the model
-from sklearn.model_selection import train_test_split
-
-X = dftrain['message']  # this time we want to look at the text
-y = dftrain['sentiment']
-#####################Pipeline Model
-# word count analysis
-word_count = dftrain['message'].apply(lambda x: len(x.split()))
-dftrain['word_count'] = word_count
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-# since i am going to use the tfidtransformer and linearsvc, i should thus create their objects first
-
-# create tfidf object
-from sklearn.feature_extraction.text import TfidfVectorizer
-# tfidf_transformer = TfidfTransformer()
-
-# create linearsvc object
-from sklearn.svm import LinearSVC
-# clf = LinearSVC()
-
-from sklearn.pipeline import Pipeline
-text_clf = Pipeline([('tfidf', TfidfVectorizer()),
-                     ('clf', LinearSVC()),])
-
-# Feed the training data through the pipeline
-text_clf.fit(X_train, y_train)  
-
-############################Logistic Regression Model
-#creating a copy of our dataframe
-# punctuation count 
-
-dftrain['punct_count']  = dftrain['message'].apply(lambda x: len([i for i in x if i in string.punctuation]))
-
-df_copy = dftrain
-
-# setting our XFeature and label variables
-X = df_copy[['word_count','punct_count']]  
-y = df_copy['sentiment']
-
-# splitting the train data
-from sklearn.model_selection import train_test_split
-x_train, x_test, Y_train, Y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-#selecting the logistic regression model from sklearn and selecting lbfgs as our solver
-from sklearn.linear_model import LogisticRegression
-lr_model = LogisticRegression(solver='lbfgs')
-
-#training our model
-lr_model.fit(x_train, Y_train)
-
-##########################SVM Model
-df_SVM_train = dftrain
-df_SVM_test=dftest
-
-#Removing puncuations from the messege column
-def remove_punctuations(text):
-    for punctuation in string.punctuation:
-        text = text.replace(punctuation, '')
-    return text
-
-df_SVM_train["message"] = df_SVM_train['message'].apply(remove_punctuations)
-df_SVM_test["message"] = df_SVM_test['message'].apply(remove_punctuations)
-
-#Defining training and testing data
-x_train = df_SVM_train['message']
-y_train = df_SVM_train['sentiment']
-x_test = df_SVM_test['message']
-
-from sklearn.feature_extraction.text import CountVectorizer
-count_vect = CountVectorizer()
-
-X_train_counts = count_vect.fit_transform(x_train)
-
-#Transforming also the x_test data to numerical data
-X_test_counts = count_vect.transform(x_test)
-
-from sklearn.svm import SVC  # to be added on the import cell
-svm = SVC()
-svc = SVC(kernel='linear',C=2,degree=5,gamma='auto')
-svc.fit(X_train_counts, y_train)
-
 ################################
 
 # changing background colour
@@ -114,7 +35,6 @@ def local_css(file_name):
 
 local_css('style.css')
 
-@st.cache(suppress_st_warning=True)
 
 # The main function where we will build the actual app
 def main():
@@ -148,32 +68,41 @@ def main():
 		st.markdown("The purpose of this web app is to demonstrate the functionality and performance \n of various models on tweet analysis and classification specifically for climate change.")
 
 		st.subheader("Raw Twitter data and label")
-		if st.checkbox('Show raw data'): # data is hidden if box is unchecked
-			st.write(dftrain[['sentiment','message','tweetid']].head(10)) # will write the df to the page
+		
 
 	# Building out the predication page
 	if selection == "Prediction":
 		# option to choose model
-		modsel = st.selectbox('Choose a model for prediction:', ["SKLearn Pipeline", "Logistic Regression", "SVM"])
-		
-
+		modsel = st.selectbox('Choose a model for prediction:', ["SKLearn Pipeline","SVM"])# "Logistic Regression", "SVM"])
+		# modsel = "SKLearn Pipeline"
+		# Load the model from the file 
+		 
 		st.info("Prediction with ML Models")
 		# Creating a text box for user input
 		tweet_text = st.text_area("Enter Text","Type Here")
-
 		if st.button("Classify"):
 			if modsel == "SKLearn Pipeline":
-				prediction =text_clf.predict([tweet_text])
-				st.success("Text Category: {}".format(pred_values[prediction[0]]))
-			elif modsel == "Logistic Regression":
-				prediction =lr_model.predict(tweet_text)
+				knn_from_joblib = joblib.load('filename.pkl')
+				prediction =knn_from_joblib.predict([tweet_text])
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
 			elif modsel == "SVM":
-				prediction =svc.predict(tweet_text)
+				svc1 = joblib.load('svc_model.pkl')
+				prediction =svc1.predict(tweet_text)
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
-			# When model has successfully run, will print prediction
-			# You can use a dictionary or similar structure to make this output
-			# more human interpretable.
+		# if st.button("Classify"):
+		#	if modsel == "SKLearn Pipeline":
+		#		prediction =text_clf.predict([tweet_text])
+		#		st.success("Text Category: {}".format(pred_values[prediction[0]]))
+		#	elif modsel == "Logistic Regression":
+		#		prediction =lr_model.predict(tweet_text)
+		#		st.success("Text Category: {}".format(pred_values[prediction[0]]))
+		#	elif modsel == "SVM":
+		#		prediction =svc.predict(tweet_text)
+		#		st.success("Text Category: {}".format(pred_values[prediction[0]]))
+		#	# When model has successfully run, will print prediction
+		#	# You can use a dictionary or similar structure to make this output
+		#	# more human interpretable.
+		
 	if selection == "Exploratory Data Analysis":
 		# boxplots for word count analysis
 		# create subplots

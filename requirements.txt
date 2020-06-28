@@ -1,0 +1,2 @@
+-U streamlit numpy pandas scikit-learn
+wordcloud
