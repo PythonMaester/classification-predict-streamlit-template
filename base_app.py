@@ -26,7 +26,12 @@ import joblib
 
 #loading the data
 dftrain = pd.read_csv('train.csv')
-################################
+# data preprocessing
+# punctuation count
+dftrain['punct_count']  = dftrain['message'].apply(lambda x: len([i for i in x if i in string.punctuation]))
+# word count
+word_count = dftrain['message'].apply(lambda x: len(x.split()))
+dftrain['word_count'] = word_count
 
 # changing background colour
 def local_css(file_name):
@@ -87,19 +92,13 @@ def main():
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
 			elif modsel == "SVM":
 				svc1 = joblib.load('svc_model.pkl')
+				from sklearn.feature_extraction.text import CountVectorizer
+				count_vect = CountVectorizer()
+
+				Xtc1 = count_vect.fit_transform([tweet_text])
 				prediction =svc1.predict(tweet_text)
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
-		# if st.button("Classify"):
-		#	if modsel == "SKLearn Pipeline":
-		#		prediction =text_clf.predict([tweet_text])
-		#		st.success("Text Category: {}".format(pred_values[prediction[0]]))
-		#	elif modsel == "Logistic Regression":
-		#		prediction =lr_model.predict(tweet_text)
-		#		st.success("Text Category: {}".format(pred_values[prediction[0]]))
-		#	elif modsel == "SVM":
-		#		prediction =svc.predict(tweet_text)
-		#		st.success("Text Category: {}".format(pred_values[prediction[0]]))
-		#	# When model has successfully run, will print prediction
+
 		#	# You can use a dictionary or similar structure to make this output
 		#	# more human interpretable.
 		
@@ -178,6 +177,7 @@ def main():
 		st.pyplot()
 		st.markdown('The key take away from these word clouds is that each class has its own distinct predominant words(or phrases)')
 
+		# the corpus
 		def create_corpus(df,sentiment):
 			list1 = []
 			for s in dftrain[dftrain["sentiment"]== sentiment].message.str.split():
