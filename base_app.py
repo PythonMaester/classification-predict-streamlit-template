@@ -178,6 +178,60 @@ def main():
 		st.pyplot()
 		st.markdown('The key take away from these word clouds is that each class has its own distinct predominant words(or phrases)')
 
+		def create_corpus(df,sentiment):
+			list1 = []
+			for s in dftrain[dftrain["sentiment"]== sentiment].message.str.split():
+				for i in s:
+					list1.append(i)
+			return list1
+
+		corpus2 = create_corpus(df=dftrain, sentiment=2)
+		corpus1 = create_corpus(df=dftrain, sentiment=1)
+		corpus0 = create_corpus(df=dftrain, sentiment=0)
+		corpus3 = create_corpus(df=dftrain, sentiment=-1)
+
+		d2= defaultdict(int)
+		for word in corpus2:
+			if word in stop:
+				d2[word]+=1
+
+		d1 =defaultdict(int)
+		for word in corpus1:
+			if word in stop:
+				d1[word]+=1
+
+		d0= defaultdict(int)
+		for word in corpus0:
+			if word in stop:
+				d0[word]+=1
+
+		d3= defaultdict(int)
+		for word in corpus3:
+			if word in stop:
+				d3[word]+=1
+
+		most2 = sorted(d2.items(), key=lambda x:x[1], reverse=True)[:10]
+		most1 = sorted(d1.items(), key=lambda x:x[1], reverse=True)[:10]
+		most0 = sorted(d0.items(), key=lambda x:x[1], reverse=True)[:10]
+		most3 = sorted(d3.items(), key=lambda x:x[1], reverse=True)[:10]
+		x2,y2 =zip(*most2)
+		x1 ,y1=zip(*most1)
+		x0 ,y0=zip(*most0)
+		x3 ,y3=zip(*most3)
+
+
+		plt.figure(1, figsize=(16, 8))
+		plt.ylabel("The number of times the stopword was used ")
+		plt.bar(x2,y2)
+		plt.subplot(1, 2, 2)
+		plt.bar(x1, y1)
+		plt.subplot(1, 2 , 1)
+		plt.bar(x0,y0)
+		plt.legend(['News','Neutral'])
+		plt.subplot(1 , 2, 2)
+		plt.bar(x3,y3)
+		plt.legend(['Pro','Anti'])
+
 	if selection == 'Test Shop':
 		st.markdown('In this section im just testing things out,\n dont know what i should put in and how i should do it but it will be here for now')
 
