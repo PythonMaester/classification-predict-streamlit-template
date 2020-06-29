@@ -1,5 +1,6 @@
 # Streamlit-based Web Application
-#### EXPLORE Data Science Academy Classification Predict
+#### A Web Application that classifies people's tweets about climate change into four different categories: News, Pro, Neutral and Anti..
+
 
 ## 1) Overview
 
