@@ -1,5 +1,5 @@
 # Streamlit-based Web Application
-#### A Web Application that classifies people's tweets about climate change into four different categories: News, Pro, Neutral and Anti..
+#### A Web Application that classifies people's tweets about climate change into four different categories: News about climate change, tweets of people who believe that climate change is true(Pro), tweets that are Neutral to climate change and tweets of people who do not believe in climate change(Anti).
 
 
 ## 1) Overview
