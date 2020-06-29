@@ -263,7 +263,7 @@ def main():
 
 	# Building out the "Information" page
 	if selection == "Information":
-		image = Image.open('/images/markus-spiske-rxo6paehyqq-unsplash.jpg')
+		image = Image.open('markus-spiske-rxo6paehyqq-unsplash.jpg')
 		st.info("General Information")
 		st.image(image, caption='Climate change, photo by Markus Spiske' )#, use_column_width=True)
 	
@@ -459,7 +459,7 @@ def main():
 			st.write(dat1.head())
 
 		# testing images
-		image = Image.open('images\markus-spiske-rxo6paehyqq-unsplash.jpg')
+		image = Image.open('markus-spiske-rxo6paehyqq-unsplash.jpg')
 
 		st.image(image, caption='Climate change, photo by Markus Spiske' , use_column_width=True)
 	if selection == 'Our People':
