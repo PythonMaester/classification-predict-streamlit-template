@@ -136,9 +136,10 @@ def main():
 				prediction =skppl.predict([tweet_text])
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
 			elif modsel == "Logistic Regression":
-				lr_model = joblib.load('lr_model.pkl')
+				lr_vect = joblib.load('lr_vect.pk')
+				lr_model = joblib.load('lr_mod.pkl')
 				tweet_x = np.array([tweet_text])
-				x_ = vectorizer.transform(tweet_x)
+				x_ = lr_vect.transform(tweet_x)
 
 				prediction =lr_model.predict(x_)
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
