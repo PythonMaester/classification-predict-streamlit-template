@@ -257,7 +257,7 @@ def main():
 	
 	# Creating sidebar with selection box -
 	# you can create multiple pages this way
-	options = ["Information", "Exploratory Data Analysis and Insights", "Prediction", 'Test Shop', 'Our People' ]
+	options = ["Information", "Exploratory Data Analysis and Insights", "Prediction", 'Our People' ]
 	selection = st.sidebar.radio("Choose Option", tuple(options))
 
 
@@ -268,7 +268,7 @@ def main():
 		st.image(image, caption='Climate change, photo by Markus Spiske' )#, use_column_width=True)
 	
 		# You can read a markdown file from supporting resources folder
-		st.markdown("The purpose of this web app is to demonstrate the functionality and performance \n of various models on tweet analysis and classification specifically for climate change.")
+		st.markdown("The purpose of this web app is to demonstrate the functionality and performance \n of various models on tweet analysis and classification specifically for climate change. And to draw insights that could be beneficial for the client.")
 
 		st.subheader("View of raw Data structure")
 		if st.checkbox('Show raw data'): # data is hidden if box is unchecked
@@ -310,8 +310,10 @@ def main():
 		#	# more human interpretable.
 		
 	if selection == "Exploratory Data Analysis and Insights":
+		st.title("Exploratory Data Analysis")
 		# boxplots for word count analysis
 		# create subplots
+		st.subheader("Boxplots")
 		plt.figure(figsize=(1,1))
 
 		fig, axs = plt.subplots(1, 4, sharey = True)
@@ -340,8 +342,9 @@ def main():
 		axs[0].set_ylabel('Word Count')
 
 		st.pyplot()
-
+		
 		st.markdown('The boxplots of word count show distinct properties for each class.\n The presence of outliers, varying medians and range sizes imply \n that the word count property will add substantial value to model training.')
+		st.subheader("Bar chart")
 		#A bar graph comparing the frequency of each sentiment
 		dftrain['sentiment'].value_counts().plot(kind = 'bar')
 		plt.xticks(rotation='horizontal')
@@ -353,6 +356,7 @@ def main():
 
 		# the following code focuses on word clouds
 		# extracting messages of each class
+		st.subheader("Wordclouds")
 		class2_words = ' '.join([text for text in dftrain[dftrain['sentiment']==2]['message']])
 		class1_words = ' '.join([text for text in dftrain[dftrain['sentiment']==1]['message']])
 		class0_words = ' '.join([text for text in dftrain[dftrain['sentiment']==0]['message']])
@@ -382,88 +386,25 @@ def main():
 		axs[0,1].set_title('Neutral to Climate Change')
 		axs[1,0].set_title('Anti Climate Change')
 		st.pyplot()
-		st.markdown('The key take away from these word clouds is that each class has its own distinct predominant words(or phrases)')
+		st.markdown('These wordclouds show each class after removal of the two phrases: "global warming" and "climate change".The key take away from these word clouds is that each class has its own distinct predominant words(or phrases), and thus the removal of those tag words makes the classes more distinct.')
 		
 		# -------------------------------------------------
 		# the corpus
-		def create_corpus(df,sentiment):
-			list1 = []
-			for s in dftrain[dftrain["sentiment"]== sentiment].message.str.split():
-				for i in s:
-					list1.append(i)
-			return list1
+		st.subheader("Word count distribution plots")
+		image2 = Image.open('WhatsApp Image 2020-06-29 at 15.50.26.jpeg')
+		st.image(image2)
+		st.markdown('This graph shows the distribution of the word count frequency. It shows the relationship between the number of words in a tweet and it''s class. From the graph we can see that the tweets from class News have a lenth from 5 to 25 and it''s tweet lenth has normal distribution along mean 16. It also shows the same patten for the rest of the classes. With class Pro having work count lenths from 4 till 30, with more tweets around lenth 21. Class Neutral has lenths from 2 to 30, with most tweets around 20. And Class Anti has lenths from 4 to 30, with most tweets around 21.')
 
-		corpus2 = create_corpus(df=dftrain, sentiment=2)
-		corpus1 = create_corpus(df=dftrain, sentiment=1)
-		corpus0 = create_corpus(df=dftrain, sentiment=0)
-		corpus3 = create_corpus(df=dftrain, sentiment=-1)
-
-		d2= defaultdict(int)
-		for word in corpus2:
-			if word in stop:
-				d2[word]+=1
-
-		d1 =defaultdict(int)
-		for word in corpus1:
-			if word in stop:
-				d1[word]+=1
-
-		d0= defaultdict(int)
-		for word in corpus0:
-			if word in stop:
-				d0[word]+=1
-
-		d3= defaultdict(int)
-		for word in corpus3:
-			if word in stop:
-				d3[word]+=1
-
-		most2 = sorted(d2.items(), key=lambda x:x[1], reverse=True)[:10]
-		most1 = sorted(d1.items(), key=lambda x:x[1], reverse=True)[:10]
-		most0 = sorted(d0.items(), key=lambda x:x[1], reverse=True)[:10]
-		most3 = sorted(d3.items(), key=lambda x:x[1], reverse=True)[:10]
-		x2,y2 =zip(*most2)
-		x1 ,y1=zip(*most1)
-		x0 ,y0=zip(*most0)
-		x3 ,y3=zip(*most3)
+		st.title("Insights")
+		st.markdown('In conclusion we chose the Pipeline Model because the score was the highest. This model will be able to classify whether or not a person believes in climate change, based on their novel tweet data. Three Models score: ')
+		st.markdown('Pipeline Model:  0.75260')
+		st.markdown('Logistic Regression Model: 0.74952')
+		st.markdown('SVM Model: 0.64615')
 
 
-		plt.figure(1, figsize=(8, 4))
-		plt.ylabel("The number of times the stopword was used ")
-		plt.bar(x2,y2)
-		plt.subplot(1, 2, 2)
-		plt.bar(x1, y1)
-		plt.subplot(1, 2 , 1)
-		plt.bar(x0,y0)
-		plt.legend(['News','Neutral'])
-		plt.subplot(1 , 2, 2)
-		plt.bar(x3,y3)
-		plt.legend(['Pro','Anti'])
-		plt.tight_layout()
-		st.pyplot()
-
-
-	if selection == 'Test Shop':
-		st.markdown('In this section im just testing things out,\n dont know what i should put in and how i should do it but it will be here for now')
-
-		# testing selectbox
-		st.markdown('Testing selectbox')
-		selbox = ['a','b','x']
-		sb = st.selectbox('choose', selbox)
-		st.write(sb)
-
-		# testing the csv uploader
-		uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-		if uploaded_file is not None:
-			dat1 = pd.read_csv(uploaded_file)
-			st.write(dat1.head())
-
-		# testing images
-		image = Image.open('markus-spiske-rxo6paehyqq-unsplash.jpg')
-
-		st.image(image, caption='Climate change, photo by Markus Spiske' , use_column_width=True)
 	if selection == 'Our People':
 		st.markdown('Project Owner: EDSA')
+		st.markdown('Our Data Scientists Team')
 		st.markdown('Scrum Master : Noluthando Khumalo')
 		st.markdown('Developer: Itumeleng Ngoetjana')
 		st.markdown('Designer : Thavha Tsiwana')
