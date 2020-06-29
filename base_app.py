@@ -6,6 +6,9 @@
 	1: The author believes in climate change
 	0: The message has a neutral sentiment
 	-1: The author does not believe in climate change
+
+	The web app also shows Exploratory Data Analysis and Insights of
+	the given data.
 """
 
 
@@ -23,15 +26,56 @@ from wordcloud import WordCloud
 import string
 import pickle
 import joblib
+import re
+
+
+#stopwords
+import nltk
+from nltk.corpus import stopwords
+stop = set(stopwords.words('english'))
+from collections import defaultdict
 
 #loading the data
 dftrain = pd.read_csv('train.csv')
 # data preprocessing
+raw = dftrain.head().copy()
+# creating object for vectorizing the tweets
+X= np.array(dftrain['message'])
+y= np.array(dftrain['sentiment'])
+
+# create vectorizer object
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer = TfidfVectorizer()
+
+# split data
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+vectorizer.fit(X_train)
 # punctuation count
 dftrain['punct_count']  = dftrain['message'].apply(lambda x: len([i for i in x if i in string.punctuation]))
 # word count
 word_count = dftrain['message'].apply(lambda x: len(x.split()))
 dftrain['word_count'] = word_count
+# punctuation removing function
+def remove_punctuations(text):
+    for punctuation in string.punctuation:
+        text = text.replace(punctuation, '')
+    return text
+# the following code is a url remover
+def  clean_text(df, text_field):
+    """
+    this function takes in a dataframe,text field and removes urls from the text field then return a dataframe with urls removed form the text field
+    """
+    df[text_field] = df[text_field].str.lower()
+    df[text_field] = df[text_field].apply(lambda elem: re.sub(r"(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)|^rt|http.+?", "", elem))  
+    return df
+
+dftrain['message'] = clean_text(dftrain,'message')['message']
+
+# tag words removing function
+dftrain['message'] = dftrain['message'].apply(lambda x: (x.lower()).replace('climate change',''))
+dftrain['message'] = dftrain['message'].apply(lambda x: (x.lower()).replace('global warming',''))
+
 
 # changing background colour
 def local_css(file_name):
@@ -59,7 +103,7 @@ def main():
 	
 	# Creating sidebar with selection box -
 	# you can create multiple pages this way
-	options = ["Information", "Exploratory Data Analysis", "Prediction", 'Test Shop', 'Our People' ]
+	options = ["Information", "Exploratory Data Analysis and Insights", "Prediction", 'Test Shop', 'Our People' ]
 	selection = st.sidebar.radio("Choose Option", tuple(options))
 
 
@@ -72,14 +116,15 @@ def main():
 		# You can read a markdown file from supporting resources folder
 		st.markdown("The purpose of this web app is to demonstrate the functionality and performance \n of various models on tweet analysis and classification specifically for climate change.")
 
-		st.subheader("Raw Twitter data and label")
+		st.subheader("View of raw Data structure")
+		if st.checkbox('Show raw data'): # data is hidden if box is unchecked
+			st.write(raw) # will write the df to the page
 		
 
 	# Building out the predication page
 	if selection == "Prediction":
 		# option to choose model
-		modsel = st.selectbox('Choose a model for prediction:', ["SKLearn Pipeline","SVM"])# "Logistic Regression", "SVM"])
-		# modsel = "SKLearn Pipeline"
+		modsel = st.selectbox('Choose a model for prediction:', ["SKLearn Pipeline", "Logistic Regression", "SVM"])
 		# Load the model from the file 
 		 
 		st.info("Prediction with ML Models")
@@ -87,22 +132,29 @@ def main():
 		tweet_text = st.text_area("Enter Text","Type Here")
 		if st.button("Classify"):
 			if modsel == "SKLearn Pipeline":
-				knn_from_joblib = joblib.load('filename.pkl')
-				prediction =knn_from_joblib.predict([tweet_text])
+				skppl = joblib.load('skppl2.pkl')
+				prediction =skppl.predict([tweet_text])
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
+			elif modsel == "Logistic Regression":
+				lr_model = joblib.load('lr_model.pkl')
+				tweet_x = np.array([tweet_text])
+				x_ = vectorizer.transform(tweet_x)
+
+				prediction =lr_model.predict(x_)
+				st.success("Text Category: {}".format(pred_values[prediction[0]]))
+
 			elif modsel == "SVM":
-				svc1 = joblib.load('svc_model.pkl')
-				from sklearn.feature_extraction.text import CountVectorizer
-				count_vect = CountVectorizer()
-
-				Xtc1 = count_vect.fit_transform([tweet_text])
-				prediction =svc1.predict(tweet_text)
+				svm_vecty = joblib.load('svm_vecty.pk')
+				svm_model = joblib.load('svm_model.pkl')
+				tweet_text = remove_punctuations(tweet_text)
+				tweet_x = np.array([tweet_text])
+				x_ = svm_vecty.transform(tweet_x)
+				prediction =svm_model.predict(x_)
 				st.success("Text Category: {}".format(pred_values[prediction[0]]))
-
 		#	# You can use a dictionary or similar structure to make this output
 		#	# more human interpretable.
 		
-	if selection == "Exploratory Data Analysis":
+	if selection == "Exploratory Data Analysis and Insights":
 		# boxplots for word count analysis
 		# create subplots
 		plt.figure(figsize=(1,1))
@@ -176,7 +228,8 @@ def main():
 		axs[1,0].set_title('Anti Climate Change')
 		st.pyplot()
 		st.markdown('The key take away from these word clouds is that each class has its own distinct predominant words(or phrases)')
-
+		
+		# -------------------------------------------------
 		# the corpus
 		def create_corpus(df,sentiment):
 			list1 = []
@@ -220,7 +273,7 @@ def main():
 		x3 ,y3=zip(*most3)
 
 
-		plt.figure(1, figsize=(16, 8))
+		plt.figure(1, figsize=(8, 4))
 		plt.ylabel("The number of times the stopword was used ")
 		plt.bar(x2,y2)
 		plt.subplot(1, 2, 2)
@@ -231,6 +284,9 @@ def main():
 		plt.subplot(1 , 2, 2)
 		plt.bar(x3,y3)
 		plt.legend(['Pro','Anti'])
+		plt.tight_layout()
+		st.pyplot()
+
 
 	if selection == 'Test Shop':
 		st.markdown('In this section im just testing things out,\n dont know what i should put in and how i should do it but it will be here for now')
@@ -248,7 +304,7 @@ def main():
 			st.write(dat1.head())
 
 		# testing images
-		image = Image.open('images\markus-spiske-rxo6PaEhyqQ-unsplash.jpg')
+		image = Image.open('images\markus-spiske-rxo6paehyqq-unsplash.jpg')
 
 		st.image(image, caption='Climate change, photo by Markus Spiske' , use_column_width=True)
 	if selection == 'Our People':
